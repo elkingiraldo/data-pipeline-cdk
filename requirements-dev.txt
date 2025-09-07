@@ -1,1 +1,14 @@
-pytest==6.2.5
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+pytest-asyncio>=0.21.0
+black>=23.7.0
+flake8>=6.0.0
+mypy>=1.4.0
+pre-commit>=3.3.0
+tox>=4.6.0
+moto>=4.1.0
+boto3-stubs[s3,lambda,glue,lakeformation,athena]>=1.28.0
+bandit>=1.7.0
+safety>=2.3.0
+pylint>=2.17.0
