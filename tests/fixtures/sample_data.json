@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john.doe@example.com",
+      "address": {
+        "street": "123 Main St",
+        "city": "New York",
+        "zipcode": "10001"
+      },
+      "phone": "+1-555-0100",
+      "company": {
+        "name": "Tech Corp",
+        "catchPhrase": "Leading innovation"
+      }
+    },
+    {
+      "id": 2,
+      "name": "Jane Smith",
+      "email": "jane.smith@example.com",
+      "address": {
+        "street": "456 Oak Ave",
+        "city": "Los Angeles",
+        "zipcode": "90001"
+      },
+      "phone": "+1-555-0200",
+      "company": {
+        "name": "Data Inc",
+        "catchPhrase": "Data-driven solutions"
+      }
+    }
+  ]
+}
