@@ -74,7 +74,7 @@ class AnalyticsStack(Stack):
 
             work_group_configuration=athena.CfnWorkGroup.WorkGroupConfigurationProperty(
                 # Results configuration
-                result_configuration_updates=athena.CfnWorkGroup.ResultConfigurationUpdatesProperty(
+                result_configuration=athena.CfnWorkGroup.ResultConfigurationProperty(
                     output_location=f"s3://{self.storage_stack.athena_results_bucket.bucket_name}/query-results/",
                     encryption_configuration=athena.CfnWorkGroup.EncryptionConfigurationProperty(
                         encryption_option="SSE_S3"

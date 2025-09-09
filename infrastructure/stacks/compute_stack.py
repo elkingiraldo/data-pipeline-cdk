@@ -65,7 +65,7 @@ class ComputeStack(Stack):
 
     def _create_lambda_layer(self) -> lambda_.LayerVersion:
         """Create Lambda layer for common dependencies."""
-        layer_path = Path("lambda/layers/common")
+        layer_path = Path("lambdas/layers/common")
 
         # Create layer
         layer = lambda_.LayerVersion(
@@ -151,7 +151,7 @@ class ComputeStack(Stack):
 
     def _create_data_extractor_lambda(self) -> lambda_.Function:
         """Create Lambda function for data extraction."""
-        lambda_path = Path("lambda/data_extractor")
+        lambda_path = Path("lambdas/data_extractor")
 
         # Create Lambda function
         function = lambda_.Function(

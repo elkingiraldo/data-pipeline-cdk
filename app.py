@@ -21,6 +21,10 @@ def main():
     # Create CDK app
     app = cdk.App()
 
+    # Add context values
+    app.node.set_context("environment", settings.environment)
+    app.node.set_context("project", settings.project_name)
+
     # Get account and region from environment or use defaults
     account = os.environ.get("CDK_DEFAULT_ACCOUNT", settings.account_id)
     region = os.environ.get("CDK_DEFAULT_REGION", settings.region)
@@ -40,10 +44,6 @@ def main():
         description=f"Data Pipeline Stack for {settings.environment} environment",
         stack_name=f"data-pipeline-{settings.environment}"
     )
-
-    # Add context values
-    app.node.set_context("environment", settings.environment)
-    app.node.set_context("project", settings.project_name)
 
     # Synthesize
     app.synth()
