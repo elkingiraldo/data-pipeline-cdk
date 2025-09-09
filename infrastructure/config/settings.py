@@ -19,7 +19,7 @@ class PipelineSettings(BaseSettings):
     owner_tag: str = Field(default="data-engineering", description="Owner tag")
 
     # S3 Configuration
-    data_bucket_name: Optional[str] = Field(default=None, description="S3 bucket name")
+    data_bucket_name: Optional[str] = Field(default="data-pipeline-cdk-dev-data-bucket", description="S3 bucket name")
     athena_results_bucket: Optional[str] = Field(default=None)
 
     # Lambda Configuration
