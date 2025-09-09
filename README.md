@@ -1,6 +1,6 @@
 # 🚀 AWS Data Pipeline with CDK
 
-A production-ready serverless data pipeline built with AWS CDK in Python that extracts data from public APIs, stores it in S3, catalogs it with AWS Glue, and makes it queryable through Amazon Athena.
+A production-ready serverless data-pipeline built with AWS CDK in Python that extracts data from public APIs, stores it in S3, catalogs it with AWS Glue, and makes it queryable through Amazon Athena.
 
 ## 📋 Table of Contents
 
