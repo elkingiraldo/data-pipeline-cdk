@@ -160,13 +160,16 @@ class ComputeStack(Stack):
             runtime=lambda_.Runtime.PYTHON_3_13,
             code=lambda_.Code.from_asset(
                 str(lambda_path),
-                bundling={
-                    "image": lambda_.Runtime.PYTHON_3_13.bundling_image,
-                    "command": [
-                        "bash", "-c",
-                        "pip install -r requirements.txt -t /asset-output && cp -au . /asset-output"
-                    ]
-                }
+                exclude=[
+                    "**/__pycache__/**",
+                    "**/*.pyc",
+                    ".venv/**", "venv/**",
+                    ".pytest_cache/**", "tests/**",
+                    "node_modules/**",
+                    "*.md", "Dockerfile",
+                    "requirements.txt",
+                    "requirements-dev.txt",
+                ],
             ),
             handler="handler.lambda_handler",
             role=self.lambda_role,
@@ -185,7 +188,6 @@ class ComputeStack(Stack):
             tracing=lambda_.Tracing.ACTIVE,
             retry_attempts=2,
             log_retention=logs.RetentionDays.ONE_WEEK if self.settings.environment == "dev" else logs.RetentionDays.ONE_MONTH,
-            reserved_concurrent_executions=10  # Limit concurrent executions
         )
 
         # Grant S3 permissions

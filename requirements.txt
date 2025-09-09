@@ -1,12 +1,9 @@
 aws-cdk-lib>=2.213.0
 constructs>=10.0.0,<11.0.0
 python-dotenv>=1.0.0
-boto3>=1.28.0
 pydantic>=2.7,<3
 pydantic-settings>=2.7,<3
 requests>=2.32.3
 backoff>=2.2.1
 pandas>=2.2.2
 pyarrow>=16.1.0
-pytest>=8.3.3
-moto[s3,lambda,glue]>=5.0.12
