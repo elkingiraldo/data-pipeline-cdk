@@ -1,15 +1,11 @@
 """S3 writer for storing processed data."""
 
-import io
 import json
 import logging
 from datetime import datetime, UTC
 from typing import Dict, Any, List, Optional
 
 import boto3
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 
 logger = logging.getLogger(__name__)
 
@@ -18,12 +14,7 @@ class S3Writer:
     """Write data to S3 in various formats."""
 
     def __init__(self, bucket_name: str):
-        """
-        Initialize S3 writer.
-
-        Args:
-            bucket_name: S3 bucket name
-        """
+        """Initialize S3 writer."""
         self.bucket_name = bucket_name
         self.s3_client = boto3.client("s3")
 
@@ -31,34 +22,21 @@ class S3Writer:
             self,
             data: List[Dict[str, Any]],
             prefix: str,
-            format: str = "parquet",
+            format: str = "json",  # Cambiar default a JSON
             metadata: Optional[Dict[str, Any]] = None
     ) -> str:
-        """
-        Write data to S3 in specified format.
-
-        Args:
-            data: Data to write
-            prefix: S3 key prefix
-            format: Output format (parquet, json, csv)
-            metadata: Optional metadata to attach
-
-        Returns:
-            S3 key of written object
-        """
+        """Write data to S3 in specified format."""
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
-        if format == "parquet":
-            s3_key = f"{prefix}/data_{timestamp}.parquet"
-            content = self._to_parquet(data)
-            content_type = "application/octet-stream"
-        elif format == "json":
+        # Por ahora solo soportar JSON y CSV sin pandas
+        if format in ["parquet", "json"]:
+            # Usar JSON como fallback para parquet
             s3_key = f"{prefix}/data_{timestamp}.json"
             content = self._to_json(data)
             content_type = "application/json"
         elif format == "csv":
             s3_key = f"{prefix}/data_{timestamp}.csv"
-            content = self._to_csv(data)
+            content = self._to_csv_simple(data)
             content_type = "text/csv"
         else:
             raise ValueError(f"Unsupported format: {format}")
@@ -66,14 +44,13 @@ class S3Writer:
         # Prepare S3 metadata
         s3_metadata = {
             "record_count": str(len(data)),
-            "format": format,
+            "format": "json" if format == "parquet" else format,  # Temporal
             "timestamp": timestamp
         }
 
         if metadata:
-            # Add custom metadata (S3 has limits on metadata size)
             for key, value in metadata.items():
-                if len(key) + len(str(value)) < 1024:  # S3 metadata size limit
+                if len(key) + len(str(value)) < 1024:
                     s3_metadata[key.replace(" ", "_").lower()] = str(value)
 
         # Upload to S3
@@ -98,27 +75,27 @@ class S3Writer:
             logger.error(f"Failed to write to S3: {str(e)}")
             raise
 
-    def _to_parquet(self, data: List[Dict[str, Any]]) -> bytes:
-        """Convert data to Parquet format."""
-        df = pd.DataFrame(data)
-
-        # Convert DataFrame to Parquet
-        buffer = io.BytesIO()
-        table = pa.Table.from_pandas(df)
-        pq.write_table(table, buffer, compression='snappy')
-
-        return buffer.getvalue()
-
     def _to_json(self, data: List[Dict[str, Any]]) -> bytes:
         """Convert data to JSON format."""
         return json.dumps(data, indent=2, default=str).encode('utf-8')
 
-    def _to_csv(self, data: List[Dict[str, Any]]) -> bytes:
-        """Convert data to CSV format."""
-        df = pd.DataFrame(data)
-        buffer = io.StringIO()
-        df.to_csv(buffer, index=False)
-        return buffer.getvalue().encode('utf-8')
+    def _to_csv_simple(self, data: List[Dict[str, Any]]) -> bytes:
+        """Convert data to CSV format without pandas."""
+        if not data:
+            return b""
+
+        # Get headers from first record
+        headers = list(data[0].keys())
+
+        # Build CSV
+        lines = []
+        lines.append(",".join(headers))
+
+        for record in data:
+            values = [str(record.get(h, "")) for h in headers]
+            lines.append(",".join(values))
+
+        return "\n".join(lines).encode('utf-8')
 
     def _write_metadata_file(self, data_key: str, data: List[Dict[str, Any]],
                              metadata: Optional[Dict[str, Any]]) -> None:

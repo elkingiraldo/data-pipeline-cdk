@@ -6,10 +6,10 @@ import traceback
 from datetime import datetime, UTC
 from typing import Dict, Any
 
-from .api_client import APIClient
-from .data_processor import DataProcessor
-from .s3_writer import S3Writer
-from .utils import setup_logging, get_partition_path
+from api_client import APIClient
+from data_processor import DataProcessor
+from s3_writer import S3Writer
+from utils import setup_logging, get_partition_path
 
 # Setup logging
 logger = setup_logging()
@@ -26,8 +26,13 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Returns:
         Response with status and processing details
     """
-    request_id = context.request_id if context else "local-test"
-    logger.info(f"Starting data extraction - Request ID: {request_id}")
+    request_id = getattr(context, "aws_request_id", "local-test")
+    ctx = {
+        "request_id": request_id,
+        "function": getattr(context, "function_name", "local"),
+        "version": getattr(context, "function_version", "local"),
+    }
+    logger.info(f"Starting data extraction - Context: {ctx}")
 
     try:
         # Get configuration from environment variables

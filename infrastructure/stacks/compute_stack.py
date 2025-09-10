@@ -153,23 +153,20 @@ class ComputeStack(Stack):
         """Create Lambda function for data extraction."""
         lambda_path = Path("lambdas/data_extractor")
 
-        # Create Lambda function
         function = lambda_.Function(
             self,
             "DataExtractorFunction",
             runtime=lambda_.Runtime.PYTHON_3_13,
             code=lambda_.Code.from_asset(
                 str(lambda_path),
-                exclude=[
-                    "**/__pycache__/**",
-                    "**/*.pyc",
-                    ".venv/**", "venv/**",
-                    ".pytest_cache/**", "tests/**",
-                    "node_modules/**",
-                    "*.md", "Dockerfile",
-                    "requirements.txt",
-                    "requirements-dev.txt",
-                ],
+                bundling={
+                    "image": lambda_.Runtime.PYTHON_3_13.bundling_image,
+                    "command": [
+                        "bash", "-c",
+                        "pip install --no-cache-dir -r requirements.txt -t /asset-output && " +
+                        "cp -au . /asset-output"
+                    ],
+                }
             ),
             handler="handler.lambda_handler",
             role=self.lambda_role,
@@ -190,9 +187,7 @@ class ComputeStack(Stack):
             log_retention=logs.RetentionDays.ONE_WEEK if self.settings.environment == "dev" else logs.RetentionDays.ONE_MONTH,
         )
 
-        # Grant S3 permissions
         self.storage_stack.data_bucket.grant_write(function)
-
         return function
 
     def _create_scheduled_trigger(self) -> None:
