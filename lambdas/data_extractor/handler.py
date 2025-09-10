@@ -34,7 +34,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         Response with status and processing details
     """
     # In AWS this is `aws_request_id`
-    request_id = getattr(context, "aws_request_id", "local-test")
+    request_id = str(getattr(context, "aws_request_id", "local-test"))
     logger.info(f"Starting data extraction - Request ID: {request_id}")
 
     try:
