@@ -1,5 +1,3 @@
-"""Unit tests for storage stack."""
-
 import pytest
 from aws_cdk import App
 from aws_cdk.assertions import Template, Match

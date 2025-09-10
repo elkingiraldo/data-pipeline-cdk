@@ -20,7 +20,7 @@ install: ## Install dependencies
 	pre-commit install
 
 test: ## Run tests
-	pytest tests/ -v --cov=infrastructure --cov=lambda --cov-report=html --cov-report=term
+	pytest tests/ -v --cov=infrastructure --cov=lambdas --cov-report=html --cov-report=term
 
 test-unit: ## Run unit tests only
 	pytest tests/unit -v
