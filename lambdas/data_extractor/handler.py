@@ -6,10 +6,17 @@ import traceback
 from datetime import datetime, UTC
 from typing import Dict, Any
 
-from api_client import APIClient
-from data_processor import DataProcessor
-from s3_writer import S3Writer
-from utils import setup_logging, get_partition_path
+# Support both: running as a package (tests) and as a flat zip (Lambda)
+try:
+    from .api_client import APIClient
+    from .data_processor import DataProcessor
+    from .s3_writer import S3Writer
+    from .utils import setup_logging, get_partition_path
+except Exception:
+    from api_client import APIClient
+    from data_processor import DataProcessor
+    from s3_writer import S3Writer
+    from utils import setup_logging, get_partition_path
 
 # Setup logging
 logger = setup_logging()
@@ -26,13 +33,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Returns:
         Response with status and processing details
     """
+    # In AWS this is `aws_request_id`
     request_id = getattr(context, "aws_request_id", "local-test")
-    ctx = {
-        "request_id": request_id,
-        "function": getattr(context, "function_name", "local"),
-        "version": getattr(context, "function_version", "local"),
-    }
-    logger.info(f"Starting data extraction - Context: {ctx}")
+    logger.info(f"Starting data extraction - Request ID: {request_id}")
 
     try:
         # Get configuration from environment variables
@@ -44,7 +47,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         force_refresh = event.get("force_refresh", False)
         api_params = event.get("api_params", {})
 
-        logger.info(f"Configuration - Endpoint: {api_endpoint}, Bucket: {bucket_name}, Format: {output_format}")
+        logger.info(
+            f"Configuration - Endpoint: {api_endpoint}, Bucket: {bucket_name}, "
+            f"Format: {output_format}, ForceRefresh: {force_refresh}"
+        )
 
         # Step 1: Fetch data from API
         api_client = APIClient(api_endpoint)
