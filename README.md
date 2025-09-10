@@ -32,7 +32,6 @@ graph LR
     E --> F[Athena]
     G[Lake Formation] --> C
     G --> E
-    H[EventBridge] --> B
     H --> D
 ```
 ### Components
