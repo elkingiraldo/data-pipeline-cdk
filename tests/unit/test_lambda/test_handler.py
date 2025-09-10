@@ -39,9 +39,9 @@ def environment_variables(monkeypatch):
 class TestLambdaHandler:
     """Test Lambda handler functionality."""
 
-    @patch('lambda.data_extractor.handler.APIClient')
-    @patch('lambda.data_extractor.handler.DataProcessor')
-    @patch('lambda.data_extractor.handler.S3Writer')
+    @patch('lambdas.data_extractor.handler.APIClient')
+    @patch('lambdas.data_extractor.handler.DataProcessor')
+    @patch('lambdas.data_extractor.handler.S3Writer')
     def test_successful_data_extraction(
             self,
             mock_s3_writer,
@@ -90,7 +90,7 @@ class TestLambdaHandler:
         mock_processor_instance.process.assert_called_once()
         mock_s3_instance.write_data.assert_called_once()
 
-    @patch('lambda.data_extractor.handler.APIClient')
+    @patch('lambdas.data_extractor.handler.APIClient')
     def test_no_data_from_api(
             self,
             mock_api_client,

@@ -78,7 +78,7 @@ trigger-lambda: ## Manually trigger the Lambda function
 		response.json
 
 run-crawler: ## Manually run the Glue crawler
-	aws glue start-crawler --name $(PROJECT_NAME)_crawler
+	aws glue start-crawler --name data_pipeline_crawler
 
 query-athena: ## Run sample Athena query
 	@echo "Run this query in Athena console:"

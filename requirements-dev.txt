@@ -13,3 +13,4 @@ bandit>=1.7.0
 safety>=2.3.0
 pylint>=2.17.0
 moto[s3,lambda,glue]>=5.0.12
+pyparsing>=3.1.1

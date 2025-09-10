@@ -1,7 +1,7 @@
 """Integration tests for the complete pipeline."""
 
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 
 import boto3
 import pytest
@@ -105,7 +105,7 @@ class TestPipelineIntegration:
         month = int(parts[1].split("=")[1])
         day = int(parts[2].split("=")[1])
 
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         assert year == now.year
         assert month == now.month
         assert day == now.day
