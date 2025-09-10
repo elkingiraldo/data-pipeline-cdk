@@ -65,15 +65,17 @@ class DataPipelineStack(Stack):
         )
 
         # Create analytics stack
-        self.analytics_stack = AnalyticsStack(
-            self,
-            f"{id}-Analytics",
-            settings=settings,
-            storage_stack=self.storage_stack,
-            catalog_stack=self.catalog_stack,
-            compute_stack=self.compute_stack,
-            description="Analytics resources for data pipeline"
-        )
+        self.analytics_stack = None
+        if self.settings.enable_lake_formation:
+            self.analytics_stack = AnalyticsStack(
+                self,
+                f"{id}-Analytics",
+                settings=settings,
+                storage_stack=self.storage_stack,
+                catalog_stack=self.catalog_stack,
+                compute_stack=self.compute_stack,
+                description="Analytics resources for data pipeline"
+            )
 
         # Apply common tags
         self._apply_tags()
@@ -125,12 +127,13 @@ class DataPipelineStack(Stack):
             description="Glue database name"
         )
 
-        CfnOutput(
-            self,
-            "AthenaWorkgroupName",
-            value=self.analytics_stack.athena_workgroup.name,
-            description="Athena workgroup name"
-        )
+        if self.analytics_stack and getattr(self.analytics_stack, "athena_workgroup", None):
+            CfnOutput(
+                self,
+                "AthenaWorkgroupName",
+                value=self.analytics_stack.athena_workgroup.name,
+                description="Athena workgroup name"
+            )
 
 
 class DataPipelineStage(Stage):

@@ -203,33 +203,70 @@ class AnalyticsStack(Stack):
         return role
 
     def _setup_lake_formation(self) -> None:
-        """Setup Lake Formation permissions and governance."""
+        """Configure Lake Formation admins, data location, LF-Tags, and permissions."""
 
-        # Register S3 location with Lake Formation
+        # 1) Data Lake administrators (use self.settings.data_lake_admin_arn; for quick unblock you can set it to <account>:root)
+        data_lake_settings = lakeformation.CfnDataLakeSettings(
+            self,
+            "DataLakeAdmins",
+            admins=[
+                lakeformation.CfnDataLakeSettings.DataLakePrincipalProperty(
+                    data_lake_principal_identifier=self.settings.data_lake_admin_arn
+                )
+            ]
+        )
+
+        # 2) Register S3 data lake location (must occur after admins are set)
         data_lake_location = lakeformation.CfnResource(
             self,
             "DataLakeLocation",
             resource_arn=self.storage_stack.data_bucket.bucket_arn,
             use_service_linked_role=True
         )
+        data_lake_location.add_dependency(data_lake_settings)
 
-        # Grant permissions to Lambda role for writing data
-        lakeformation.CfnPermissions(
+        # 3) Create LF-Tags (once) and make them depend on admins to avoid permission errors
+        data_classification_tag = lakeformation.CfnTag(
             self,
-            "LambdaDataLocationPermission",
-            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
-                data_lake_principal_identifier=self.compute_stack.lambda_role.role_arn
-            ),
-            resource=lakeformation.CfnPermissions.ResourceProperty(
-                data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(
-                    s3_resource=self.storage_stack.data_bucket.bucket_arn
-                )
-            ),
-            permissions=["DATA_LOCATION_ACCESS"]
+            "DataClassificationTag",
+            tag_key="DataClassification",
+            tag_values=["Public", "Internal", "Confidential", "Restricted"]
         )
+        data_classification_tag.add_dependency(data_lake_settings)
 
-        # Grant permissions to Crawler role for cataloging
-        lakeformation.CfnPermissions(
+        environment_tag = lakeformation.CfnTag(
+            self,
+            "EnvironmentTag",
+            tag_key="Environment",
+            tag_values=["dev", "staging", "prod"]
+        )
+        environment_tag.add_dependency(data_lake_settings)
+
+        # 4) Grant DATA_LOCATION_ACCESS for Lambda, Crawler, and Analytics roles
+        #    Ensure these depend on both admins and the registered S3 location
+        for name, principal_arn in [
+            ("LambdaDataLocationPermission",    self.compute_stack.lambda_role.role_arn),
+            ("CrawlerDataLocationPermission",   self.catalog_stack.crawler_role.role_arn),
+            ("AnalyticsDataLocationPermission", self.analytics_role.role_arn),
+        ]:
+            perm = lakeformation.CfnPermissions(
+                self,
+                name,
+                data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
+                    data_lake_principal_identifier=principal_arn
+                ),
+                resource=lakeformation.CfnPermissions.ResourceProperty(
+                    data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(
+                        s3_resource=self.storage_stack.data_bucket.bucket_arn
+                    )
+                ),
+                permissions=["DATA_LOCATION_ACCESS"]
+            )
+            perm.add_dependency(data_lake_settings)
+            perm.add_dependency(data_lake_location)
+
+        # 5) Catalog permissions for the Crawler (depends on admins)
+        crawler_db_perm = lakeformation.CfnPermissions(
             self,
             "CrawlerDatabasePermission",
             data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
@@ -242,9 +279,10 @@ class AnalyticsStack(Stack):
             ),
             permissions=["CREATE_TABLE", "ALTER", "DROP"]
         )
+        crawler_db_perm.add_dependency(data_lake_settings)
 
-        # Grant permissions to Analytics role for querying
-        lakeformation.CfnPermissions(
+        # 6) Read/query permissions for the Analytics role (depends on admins)
+        analytics_tbl_perm = lakeformation.CfnPermissions(
             self,
             "AnalyticsTablePermission",
             data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
@@ -253,27 +291,13 @@ class AnalyticsStack(Stack):
             resource=lakeformation.CfnPermissions.ResourceProperty(
                 table_resource=lakeformation.CfnPermissions.TableResourceProperty(
                     database_name=self.catalog_stack.glue_database.database_input.name,
-                    table_wildcard={}  # Grant access to all tables
+                    table_wildcard={}  # grant over all tables in the database
                 )
             ),
             permissions=["SELECT", "DESCRIBE"],
             permissions_with_grant_option=[]
         )
-
-        # Create Lake Formation tags for data classification
-        data_classification_tag = lakeformation.CfnTag(
-            self,
-            "DataClassificationTag",
-            tag_key="DataClassification",
-            tag_values=["Public", "Internal", "Confidential", "Restricted"]
-        )
-
-        environment_tag = lakeformation.CfnTag(
-            self,
-            "EnvironmentTag",
-            tag_key="Environment",
-            tag_values=["dev", "staging", "prod"]
-        )
+        analytics_tbl_perm.add_dependency(data_lake_settings)
 
     def _apply_tags(self) -> None:
         """Apply tags to all resources in the stack."""
