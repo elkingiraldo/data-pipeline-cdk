@@ -15,13 +15,9 @@ A production-ready serverless data pipeline built with AWS CDK (Python) that ext
 - [Usage](#usage)
 - [Monitoring](#monitoring)
 - [Security](#security)
-- [Cost Optimization](#cost-optimization)
 - [Troubleshooting](#troubleshooting)
-- [CI/CD Pipeline](#cicd-pipeline)
 - [API Documentation](#api-documentation)
-- [Production Checklist](#production-checklist)
 - [Contributing](#contributing)
-- [License](#license)
 - [Acknowledgments](#acknowledgments)
 - [Support](#support)
 
@@ -42,12 +38,11 @@ graph LR
 ### Components
 
 - **Lambda Function**: Extracts data from public APIs and writes to S3
-- **S3 Buckets**: Data lake storage with lifecycle policies
+- **S3 Buckets**: Data lake storage
 - **Glue Crawler**: Automatically discovers and catalogs data
 - **Glue Database**: Metadata catalog for structured data
 - **Lake Formation**: Fine-grained access control and governance
 - **Athena**: SQL queries on the data lake
-- **EventBridge**: Scheduled triggers for automation
 
 ## ✨ Features
 
@@ -55,9 +50,9 @@ graph LR
 - **Multiple formats**: Parquet, JSON, CSV
 - **Automated cataloging** (Glue Crawler)
 - **Date partitioning** (year/month/day)
-- **Security & governance** (LF + encryption)
-- **Cost controls** (lifecycle, scan limits)
-- **Monitoring** (CloudWatch + X-Ray)
+- **Security & governance** LF
+- **Cost controls** (scan limits)
+- **Monitoring** (CloudWatch)
 - **Testing** (unit + integration)
 - **CI/CD-friendly**
 
@@ -138,9 +133,6 @@ For deeper tuning (Lambda timeout/memory, crawler schedule, etc.), see `infrastr
 ```bash
 # Dev
 make deploy ENVIRONMENT=dev
-
-# Production with approval
-make deploy-with-approval ENVIRONMENT=prod
 ```
 
 ### Step-by-step
@@ -261,20 +253,6 @@ Implemented:
 - **Public access block** on S3
 - **LF tags** and auditing
 
-Quick checklist:
-- No hardcoded credentials
-- Secrets in Secrets Manager
-- Private endpoints (prod)
-- CloudTrail / AWS Config / GuardDuty (prod)
-- S3 versioning, MFA delete (prod)
-
-## 💰 Cost Optimization
-
-- **S3 lifecycle** (Standard → IA → Glacier)
-- **Lambda** right-sized
-- **Athena** partitioning + Parquet + scan limits
-- Monitor with Cost Explorer
-
 ## 🔧 Troubleshooting
 
 **Lambda Timeout**
@@ -302,40 +280,6 @@ aws lakeformation grant-permissions   --principal DataLakePrincipalIdentifier=ar
 **Debug**
 ```bash
 export LOG_LEVEL=DEBUG
-```
-
-## 🚦 CI/CD Pipeline
-
-```yaml
-name: Deploy Data Pipeline
-
-on:
-  push:
-    branches: [main, develop]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-      - run: make install
-      - run: make test
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-      - run: make deploy ENVIRONMENT=prod
 ```
 
 ## 📝 API Documentation
@@ -366,15 +310,6 @@ jobs:
 }
 ```
 
-## 🎯 Production Checklist
-
-- [ ] MFA, CloudWatch alarms, AWS Config
-- [ ] Backups / DR
-- [ ] Cost alerts
-- [ ] GuardDuty
-- [ ] Runbooks
-- [ ] Load tests
-
 ## 🤝 Contributing
 
 ```bash
@@ -383,10 +318,6 @@ make test && make lint
 git commit -m "feat: add new feature"
 git push origin feature/my-feature
 ```
-
-## 📄 License
-
-MIT
 
 ## 🙏 Acknowledgments
 
