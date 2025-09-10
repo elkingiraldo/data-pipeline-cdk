@@ -179,7 +179,7 @@ cdk diff
 cdk deploy --all
 
 # 4. Test the deployment
-python scripts/test_pipeline.py
+python scripts/test_pipeline_complete.py
 ```
 
 ### Deployment Outputs
@@ -216,7 +216,7 @@ pytest --cov=infrastructure --cov=lambda --cov-report=html
 
 ```bash
 # Test all components
-python scripts/test_pipeline.py
+python scripts/test_pipeline_complete.py
 
 # Manually trigger Lambda
 make trigger-lambda
